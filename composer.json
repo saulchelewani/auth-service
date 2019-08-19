@@ -1,0 +1,27 @@
+{
+    "name": "tnm/auth-service",
+    "description": "Service integration for Auth Server",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "TNM Developers",
+            "email": "developers@tnm.co.mw"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "TNM\\AuthService\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "TNM\\AuthService\\AuthServiceProvider"
+            ]
+        }
+    }
+
+}
