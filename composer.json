@@ -3,6 +3,12 @@
     "description": "Service integration for Auth Server",
     "type": "library",
     "license": "MIT",
+    "repositories":[
+        {
+            "type": "vcs",
+            "url" : "git@bitbucket.org:tnmdev/auth-service.git"
+        }
+    ],
     "authors": [
         {
             "name": "TNM Developers",
