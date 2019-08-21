@@ -5,9 +5,16 @@ namespace TNM\AuthService\Http\Controllers;
 
 
 use App\Http\Controllers\Controller;
+use App\User;
+use Exception;
 use GuzzleHttp\Client;
-use Illuminate\Http\Request;
+use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
+use TNM\AuthService\Http\Requests\AuthenticationRequest;
+use TNM\AuthService\Models\Permission;
 
 class AuthController extends Controller
 {
@@ -20,10 +27,11 @@ class AuthController extends Controller
     {
         $this->http = new Client();
     }
-    public function authenticate(Request $request)
+
+    public function login(AuthenticationRequest $request)
     {
         try {
-            $this->http->request("POST", config('auth_server.url'), [
+            $response = $this->http->post(sprintf('%s/authenticate', config('auth_server.url')), [
                 "body" => json_encode([
                     "username" => $request->get('username'),
                     "password" => $request->get('password')
@@ -33,8 +41,81 @@ class AuthController extends Controller
                     "x-client-secret" => config('auth_server.client_secret')
                 ]
             ]);
-        } catch (\Exception $exception) {
-            return response()->json(["message" => "Failed to contact the auth server"], Response::HTTP_BAD_REQUEST);
+            $responseData = json_decode($response->getBody()->getContents(), true)['auth'];
+
+        } catch (GuzzleException $exception) {
+//            return response()->json(json_decode((string)$exception->getMessage()));
+            return response()->json(
+                ["message" => json_decode(explode("response:", $exception->getMessage())[1])],
+                Response::HTTP_BAD_REQUEST
+            );
+        } catch (Exception $exception) {
+            return response()->json(["message" => $exception->getMessage()]);
+//            return response()->json(["message" => "Failed to contact the auth server"], Response::HTTP_BAD_REQUEST);
         }
+
+        $user = $this->getUser($responseData);
+        $user->permissions()->sync($this->getUserPermissions($responseData));
+
+        return $this->generateTokens();
+    }
+
+    /**
+     * @param $responseData
+     * @return array
+     */
+    private function getUserPermissions($responseData): array
+    {
+        $routes = [];
+
+        foreach ($responseData['permissions'] as $permission) {
+            $route = Permission::updateOrCreate([
+                'origin_id' => $permission['id']],
+                [
+                    'name' => $permission['name'],
+                    'route' => $permission['route']
+                ]
+            );
+            $routes[] = $route->{'id'};
+        }
+        return $routes;
+    }
+
+    /**
+     * @param $responseData
+     * @return User
+     */
+    private function getUser($responseData): User
+    {
+        /** @var User $user */
+        return User::updateOrCreate([
+            'username' => $responseData['username']],
+            [
+                'name' => $responseData['name'],
+                'role' => $responseData['role'],
+                'password' => Hash::make(request('password'))
+            ]
+        );
+    }
+
+    /**
+     * @return JsonResponse
+     */
+    private function generateTokens(): JsonResponse
+    {
+        /** @var User $user */
+        $user = User::where(['username' => request('username')])->first();
+
+        $tokenResult = $user->createToken('Personal Access Token');
+        $token = $tokenResult->token;
+
+        if (request('remember_me')) $token->{'expires_at'} = Carbon::now()->addWeek();
+        $token->save();
+
+        return \response()->json([
+            'access_token' => $tokenResult->accessToken,
+            'token_type' => 'Bearer',
+            'expires_at' => Carbon::parse($tokenResult->token->{'expires_at'})->toDateTimeString()
+        ]);
     }
 }

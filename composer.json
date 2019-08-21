@@ -1,5 +1,5 @@
 {
-    "name": "tnm/auth-service",
+    "name": "tnmdev/auth-service",
     "description": "Service integration for Auth Server",
     "type": "library",
     "license": "MIT",
@@ -17,7 +17,9 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "guzzlehttp/guzzle": "^6.3"
+        "guzzlehttp/guzzle": "^6.3",
+        "doctrine/dbal": "^2.9",
+        "laravel/passport": "^7.2"
     },
     "autoload": {
         "psr-4": {

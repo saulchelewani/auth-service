@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Permission extends Model
 {
+    protected $guarded = [];
+
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(config('auth.providers.users.model'));
     }
 }

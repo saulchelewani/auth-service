@@ -16,8 +16,8 @@ class AddUsernameToUsersTable extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('password')->nullable()->change();
             $table->string('name')->nullable()->change();
-            $table->string('email')->unique()->nullable()->change();
-            $table->string('username');
+            $table->string('email')->nullable()->change();
+            $table->string('username')->nullable();
             $table->string('role')->nullable();
         });
     }
