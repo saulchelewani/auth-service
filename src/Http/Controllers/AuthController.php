@@ -28,7 +28,7 @@ class AuthController extends Controller
         $this->http = new Client();
     }
 
-    public function login(AuthenticationRequest $request)
+    public function login(AuthenticationRequest $request): JsonResponse
     {
         try {
             $response = $this->http->post(sprintf('%s/authenticate', config('auth_server.url')), [
@@ -57,7 +57,7 @@ class AuthController extends Controller
         $user = $this->getUser($responseData);
         $user->permissions()->sync($this->getUserPermissions($responseData));
 
-        return $this->generateTokens();
+        return response()->success($this->generateTokens(), 'auth');
     }
 
     /**
@@ -66,19 +66,14 @@ class AuthController extends Controller
      */
     private function getUserPermissions($responseData): array
     {
-        $routes = [];
-
-        foreach ($responseData['permissions'] as $permission) {
-            $route = Permission::updateOrCreate([
-                'origin_id' => $permission['id']],
+        return array_map(function (array $permission) {
+            return Permission::updateOrCreate(['origin_id' => $permission['id']],
                 [
                     'name' => $permission['name'],
                     'route' => $permission['route']
                 ]
-            );
-            $routes[] = $route->{'id'};
-        }
-        return $routes;
+            )->{'id'};
+        }, $responseData['permissions']);
     }
 
     /**
@@ -99,9 +94,9 @@ class AuthController extends Controller
     }
 
     /**
-     * @return JsonResponse
+     * @return array
      */
-    private function generateTokens(): JsonResponse
+    private function generateTokens(): array
     {
         /** @var User $user */
         $user = User::where(['username' => request('username')])->first();
@@ -112,10 +107,15 @@ class AuthController extends Controller
         if (request('remember_me')) $token->{'expires_at'} = Carbon::now()->addWeek();
         $token->save();
 
-        return \response()->json([
+        return [
             'access_token' => $tokenResult->accessToken,
             'token_type' => 'Bearer',
-            'expires_at' => Carbon::parse($tokenResult->token->{'expires_at'})->toDateTimeString()
-        ]);
+            'expires_at' => Carbon::parse($tokenResult->token->{'expires_at'})->toDateTimeString(),
+            'user' => $user->{'name'},
+            'role' => $user->{'role'},
+            'permissions' => $user->permissions()->get()->map(function (Permission $permission) {
+                return $permission->{'route'};
+            })
+        ];
     }
 }
