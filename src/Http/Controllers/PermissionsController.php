@@ -14,6 +14,7 @@ class PermissionsController extends Controller
     public function sync(Request $request)
     {
         $user = User::findByUsername($request->get('username'));
+        if (!$user) return response()->json();
         $user->update(['role' => $request->get('role')]);
         $user->permissions()->sync(Permission::sync($request->all()));
         return response()->json($user->load('permissions'));

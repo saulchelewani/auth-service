@@ -24,7 +24,7 @@ trait HasPermissionsTrait
         });
     }
 
-    public static function findByUsername(string $username): User
+    public static function findByUsername(string $username): ?User
     {
         return User::where(['username' => $username])->first();
     }
