@@ -18,8 +18,8 @@ class Authorize
      */
     public function handle($request, Closure $next)
     {
-        if (!$request->user()->hasPermission($request->route()->getName()))
-            throw new PermissionDeniedException();
+        $route = $request->route()->getName() ?: $request->route()->uri();
+        if (!$request->user()->hasPermission($route)) throw new PermissionDeniedException();
 
         return $next($request);
     }

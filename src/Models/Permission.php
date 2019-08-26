@@ -15,7 +15,7 @@ class Permission extends Model
         return $this->belongsToMany(User::class);
     }
 
-    public static function findByRoute(string $route): self
+    public static function findByRoute(string $route): ?self
     {
         return static::where(['route' => $route])->first();
     }
@@ -23,6 +23,13 @@ class Permission extends Model
     public static function getPermissionsFromRequest(array $request): array
     {
         return array_map(function (array $permission) {
+            if (!static::findByRoute($permission['route'])) {
+                static::create([
+                    'origin_id' => $permission['id'],
+                    'name' => $permission['name'],
+                    'route' => $permission['route']
+                ]);
+            }
             return $permission['route'];
         }, json_decode($request['permissions'], true));
     }
