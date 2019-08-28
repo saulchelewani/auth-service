@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateAsPermissionsTable extends Migration
+class CreatePermissionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreateAsPermissionsTable extends Migration
      */
     public function up()
     {
-        Schema::create('as_permissions', function (Blueprint $table) {
+        Schema::create('permissions', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('origin_id');
             $table->string('name');

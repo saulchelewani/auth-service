@@ -4,7 +4,6 @@ namespace TNM\AuthService\Models;
 
 use App\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
 
 class Permission extends Model
 {
