@@ -16,6 +16,14 @@ class AuthServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
         $this->mergeConfigFrom(__DIR__ . '/config/auth_server.php', 'auth_server');
 
+        $this->publishes([
+            __DIR__.'/config/auth_server.php' => config_path('auth_server.php')
+        ], 'config');
+
+        $this->publishes([
+            __DIR__.'/database/migrations' => database_path('migrations')
+        ], 'auth-migrations');
+
         Passport::routes();
 
         Response::macro('success', function (array $data, string $key = 'data') {
