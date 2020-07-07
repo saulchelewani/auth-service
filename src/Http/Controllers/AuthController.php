@@ -25,7 +25,7 @@ class AuthController extends Controller
 
     public function __construct()
     {
-        $this->http = new Client();
+        $this->http = new Client(['verify' => false);
     }
 
     public function login(AuthenticationRequest $request): JsonResponse
